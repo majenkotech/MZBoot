@@ -172,7 +172,9 @@ void processIHEXLine(uint8_t *data, uint32_t len) {
             uint32_t fullAddr = (offset << 16) | addr;
             for (int i = 0; i < dlen; i+= 4) {
                 uint32_t w = data[4+i] | (data[5+i] << 8) | (data[6+i] << 16) | (data[7+i] << 24);
-                Flash.writeWord((void *)fullAddr, w);
+                if ((fullAddr & 0x1FFFFFFF) < 0x1FC00000) {
+                    Flash.writeWord((void *)fullAddr, w);
+                }
                 fullAddr += 4;
             }
         }
