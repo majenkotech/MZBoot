@@ -251,6 +251,17 @@ void processAN1388Packet(uint8_t *data, uint32_t len) {
         }
         break;
 
+        case 0x06: { // Get device ID
+            uint8_t resp[5];
+            resp[0] = 0x06;
+            resp[1] = DEVID;
+            resp[2] = DEVID >> 8;
+            resp[3] = DEVID >> 16;
+            resp[4] = DEVID >> 24;
+            sendPacket(resp, 5);
+        }
+        break;
+
         default: {
         }
         break;
