@@ -53,7 +53,6 @@
 USBHS usbDriver;
 USBManager USB(usbDriver, 0x04d8, 0x0f5f, "chipKIT", "HID Bootloader");
 HID_Raw HID;
-//CDCACM uSerial;
 
 volatile uint8_t packet[64];
 volatile bool packetValid = false;
@@ -159,16 +158,9 @@ void processIHEXLine(uint8_t *data, uint32_t len) {
     uint8_t type = data[3];
     uint8_t cs = data[len-1];
 
-//    uSerial.print(":");
-//    for (int i = 0; i < len; i++) {
-//        uSerial.printf("%02x ", data[i]);
-//    }
-//    uSerial.println();
-
     switch(type) {
         case 0x04: { // Set address offset
             offset = data[5] | (data[4] << 8);
-//            uSerial.printf("Set offset to %04x\r\n", offset);
         }
         break;
 
@@ -176,7 +168,6 @@ void processIHEXLine(uint8_t *data, uint32_t len) {
             uint32_t fullAddr = (offset << 16) | addr;
             for (int i = 0; i < dlen; i+= 4) {
                 uint32_t w = data[4+i] | (data[5+i] << 8) | (data[6+i] << 16) | (data[7+i] << 24);
-//                uSerial.printf("Write word at %08x: %08x\r\n", fullAddr, w);
                 Flash.writeWord((void *)fullAddr, w);
                 fullAddr += 4;
             }
@@ -184,8 +175,6 @@ void processIHEXLine(uint8_t *data, uint32_t len) {
         break;
 
         default: {
-//            uSerial.printf("Unhandled IHEX type %02x\r\n", type);
-            
         }
         break;
     }
@@ -242,8 +231,6 @@ void processAN1388Packet(uint8_t *data, uint32_t len) {
             uint32_t start = data[1] | (data[2] << 8) | (data[3] << 16) | (data[4] << 24);
             uint32_t len = data[5] | (data[6] << 8) | (data[7] << 16) | (data[8] << 24);
 
-//            uSerial.printf("Calc checksum of %08x for %d bytes\r\n", start, len);
-
             uint16_t crc = calculateCRC16((uint8_t *)start, len);
             uint8_t resp[3];
             resp[0] = 0x04;
@@ -268,7 +255,6 @@ void setup() {
    
     pinMode(0, OUTPUT);    
     USB.addDevice(HID);
-//    USB.addDevice(uSerial);
     HID.onOutputReport(outputReport);
     USB.begin();
 }
@@ -284,20 +270,12 @@ void loop() {
     if (packetValid) {
         ts = millis();
         if (packetLength >= 3) {
-//            uSerial.printf("Got packet of length %d\r\n", packetLength);
-//            for (int i = 0; i < packetLength; i++) {
-//                uSerial.printf("  %02x", packet[i]);
-//            }
-//            uSerial.println();    
             uint16_t cs = (packet[packetLength - 1] << 8) | packet[packetLength - 2];
             uint16_t newcs = calculateCRC16((uint8_t *)packet, packetLength-2);
 
             if (cs == newcs) {
-//                uSerial.printf("  Checksum: %04x == %04x\r\n", cs, newcs);            
 
                 processAN1388Packet((uint8_t *)packet, packetLength - 2);
-            } else {
-//                uSerial.printf("  Checksum Bad\r\n");
             }
         }       
         packetValid = false;
