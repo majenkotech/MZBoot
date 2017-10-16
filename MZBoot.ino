@@ -60,6 +60,8 @@ volatile uint32_t packetLength = 0;
 
 void (*jumpPoint)() = (void (*)())0x9D001000;
 
+#define WRAP(X, Y) X = (X) % (Y)
+
 static const uint16_t crc_table[16] =
 {
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
@@ -87,6 +89,7 @@ void handleIncomingByte(uint8_t b) {
 
     if (dle) {
         packet[bpos++] = b;
+        WRAP(bpos, 64);
         dle = false;
     } else {
         switch (b) {
@@ -108,6 +111,7 @@ void handleIncomingByte(uint8_t b) {
 
             default: { 
                 packet[bpos++] = b;                
+                WRAP(bpos, 64);
             }
         }
     }
