@@ -269,8 +269,6 @@ void processAN1388Packet(uint8_t *data, uint32_t len) {
 }
 
 void setup() {
-   
-    pinMode(0, OUTPUT);    
     USB.addDevice(HID);
     HID.onOutputReport(outputReport);
     USB.begin();
