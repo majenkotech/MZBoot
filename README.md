@@ -4,3 +4,5 @@ It is based around the chipKIT API (new USB branch).
 A special board configuration is needed to compile this
 to fit in the bootloader area instead of the main program
 area.
+
+You also require the Flash library: https://github.com/MajenkoLibraries/Flash
