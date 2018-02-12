@@ -6,7 +6,7 @@
 #elif defined(_BOARD_MOD_BASE_FX_)
 #include "configs/mod-base-fx.h"
 #else
-#error "There is no configuration for your board"
+#error There is no configuration for your board
 #endif
 
 
