@@ -264,6 +264,15 @@ void setup() {
     #ifdef LED
     pinMode(LED, OUTPUT);
     #endif
+
+    #ifdef BUTTON
+    pinMode(BUTTON, INPUT_PULLUP);
+    delay(1);
+    if (digitalRead(BUTTON) == HIGH) {
+        executeApp();
+    }
+    #endif
+    
 }
 
 void loop() {
