@@ -1,10 +1,16 @@
 #include <Flash.h>
+#include <SoftPWMServo.h>
 
 
 #if defined(_BOARD_PKOB_DA_)
 #include "configs/pkob-da.h"
 #elif defined(_BOARD_MOD_BASE_FX_)
 #include "configs/mod-base-fx.h"
+#elif defined(_BOARD_CHIPKIT_PROMZ_)
+#include "configs/chipkit-promz.h"
+
+#define LED 21
+
 #else
 #error There is no configuration for your board
 #endif
@@ -15,7 +21,7 @@
 #define BOOT_TIMEOUT_SECONDS 5
 
 
-USBFS usbDriver;
+USBHS usbDriver;
 USBManager USB(usbDriver, 0x04d8, 0x0f5f, "chipKIT", "HID Bootloader");
 HID_Raw HID;
 
@@ -240,7 +246,12 @@ void processAN1388Packet(uint8_t *data, uint32_t len) {
     }
 }
 
+
 void setup() {
+#ifdef INIT_FUNC
+    INIT_FUNC
+#endif
+
     delay(100);
     
     USB.addDevice(HID);
@@ -249,9 +260,35 @@ void setup() {
 #endif
     HID.onOutputReport(outputReport);
     USB.begin();
+
+    #ifdef LED
+    pinMode(LED, OUTPUT);
+    #endif
 }
 
 void loop() {
+    #ifdef LED
+    static int bright = 0;
+    static int fade = 1;
+    static uint32_t led_ts = millis();
+    if (millis() - led_ts > 0) {
+        led_ts = millis();
+        bright += fade;
+        if (bright >= 255) {
+            bright = 255;
+            fade = -fade;
+        }
+
+        if (bright <= 0) {
+            bright = 0;
+            fade = -fade;
+        }
+
+        SoftPWMServoPWMWrite(LED, bright);
+
+        
+    }
+    #endif
 
     static uint32_t ts = millis();
 
