@@ -1,3 +1,6 @@
+#if defined(_BOARD_MOD_BASE_FX_)
+#define _BOARD_VALID_
+
 #pragma config FMIIEN = ON              // Ethernet RMII/MII Enable (MII Enabled)
 #pragma config FETHIO = ON              // Ethernet I/O Pin Select (Default Ethernet I/O)
 #pragma config PGL1WAY = OFF            // Permission Group Lock One Way Configuration (Allow multiple reconfigurations)
@@ -48,7 +51,6 @@
 // DEVCP0
 #pragma config CP = OFF                 // Code Protect (Protection Disabled)
 
-
-
-#define LED LED_BUILTIN
 #define MODE_HID
+
+#endif

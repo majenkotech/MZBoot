@@ -1,21 +1,7 @@
 #include <Flash.h>
 #include <SoftPWMServo.h>
 
-
-#if defined(_BOARD_PKOB_DA_)
-#include "configs/pkob-da.h"
-
-#elif defined(_BOARD_MOD_BASE_FX_)
-#include "configs/mod-base-fx.h"
-
-#elif defined(_BOARD_CHIPKIT_PROMZ_)
-#include "configs/chipkit-promz.h"
-
-#else
-#error There is no configuration for your board
-#endif
-
-
+#include "configs.h"
 
 #define ENABLE_DEBUG 0
 

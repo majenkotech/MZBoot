@@ -1,3 +1,6 @@
+#if defined(_BOARD_PKOB_DA_)
+#define _BOARD_VALID_
+
 #pragma config DEBUG =      OFF
 #pragma config JTAGEN =     OFF
 #pragma config ICESEL =     ICS_PGx2
@@ -174,5 +177,7 @@ void initDDR() {
 
 //#define INIT_FUNC initDDR();
 
-
 #define MODE_HID
+
+
+#endif
