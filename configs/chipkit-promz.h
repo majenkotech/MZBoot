@@ -47,3 +47,8 @@
 
 // DEVCP0
 #pragma config CP = OFF                 // Code Protect (Protection Disabled)
+
+
+
+#define LED LED_BUILTIN
+#define MODE_HID

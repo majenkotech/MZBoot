@@ -4,12 +4,12 @@
 
 #if defined(_BOARD_PKOB_DA_)
 #include "configs/pkob-da.h"
+
 #elif defined(_BOARD_MOD_BASE_FX_)
 #include "configs/mod-base-fx.h"
+
 #elif defined(_BOARD_CHIPKIT_PROMZ_)
 #include "configs/chipkit-promz.h"
-
-#define LED 21
 
 #else
 #error There is no configuration for your board
@@ -18,12 +18,28 @@
 
 
 #define ENABLE_DEBUG 0
+
+#ifndef BOOT_TIMEOUT_SECONDS
 #define BOOT_TIMEOUT_SECONDS 5
+#endif
 
 
+#if defined(MODE_HID)
 USBHS usbDriver;
 USBManager USB(usbDriver, 0x04d8, 0x0f5f, "chipKIT", "HID Bootloader");
 HID_Raw HID;
+
+#elif defined(MODE_CDCACM)
+USBHS usbDriver;
+USBManager USB(usbDriver, 0x04d8, 0x0f5f, "chipKIT", "CDCACM Bootloader");
+CDCACM uSerial;
+
+#elif defined(MODE_SERIAL)
+// Nothing to define here.
+
+#else
+#error No MODE_x specified
+#endif
 
 #if (ENABLE_DEBUG == 1)
 CDCACM debugSerial;
@@ -129,7 +145,13 @@ void sendPacket(uint8_t *data, uint32_t len) {
     buf[bpos++] = crch;
     buf[bpos++] = 0x04;
 
+    #if defined(MODE_HID)
     HID.sendReport(buf, bpos);    
+    #elif defined(MODE_CDCACM)
+    uSerial.write(buf, bpos);
+    #elif defined(MODE_SERIAL)
+    SERIAL.write(buf, bpos);
+    #endif
 }
 
 void processIHEXLine(uint8_t *data, uint32_t len) {
@@ -165,7 +187,11 @@ void processIHEXLine(uint8_t *data, uint32_t len) {
 }
 
 void executeApp() {
+    #if defined(MODE_HID) || defined(MODE_CDCACM)
     USB.end();
+    #elif defined(MODE_SERIAL)
+    SERIAL.end();
+    #endif
     disableInterrupts();
     IFS0 = 0;
     IFS1 = 0;
@@ -252,19 +278,6 @@ void setup() {
     INIT_FUNC
 #endif
 
-    delay(100);
-    
-    USB.addDevice(HID);
-#if (ENABLE_DEBUG == 1)
-    USB.addDevice(debugSerial);
-#endif
-    HID.onOutputReport(outputReport);
-    USB.begin();
-
-    #ifdef LED
-    pinMode(LED, OUTPUT);
-    #endif
-
     #ifdef BUTTON
     pinMode(BUTTON, INPUT_PULLUP);
     delay(1);
@@ -272,7 +285,36 @@ void setup() {
         executeApp();
     }
     #endif
+
+    #ifdef LED
+    pinMode(LED, OUTPUT);
+    #endif
+
+#if defined(MODE_HID)
+    USB.addDevice(HID);
+    HID.onOutputReport(outputReport);
+#if (ENABLE_DEBUG == 1)
+    USB.addDevice(debugSerial);
+#endif
+    USB.begin();
+
+
+
+#elif defined(MODE_CDCACM)
+    USB.addDevice(uSerial);
+    HID.onOutputReport(outputReport);
+#if (ENABLE_DEBUG == 1)
+    USB.addDevice(debugSerial);
+#endif
+    USB.begin();
+
+
+#elif defined(MODE_SERIAL)
+    SERIAL.begin(BAUD);
+
     
+#endif
+
 }
 
 void loop() {
@@ -300,6 +342,17 @@ void loop() {
     #endif
 
     static uint32_t ts = millis();
+
+
+    #if defined(MODE_CDCACM)
+    while (uSerial.available() && !packetValid) {
+        handleIncomingByte(uSerial.read());
+    }
+    #elif defined(MODE_SERIAL)
+    while (SERIAL.available() && !packetValid) {
+        handleIncomingByte(SERIAL.read());
+    }
+    #endif
 
     if (millis() - ts > (BOOT_TIMEOUT_SECONDS * 1000)) {
         executeApp();

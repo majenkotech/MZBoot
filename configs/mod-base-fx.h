@@ -47,3 +47,5 @@
 
 // DEVCP0
 #pragma config CP = OFF                 // Code Protect (Protection Disabled)
+
+#define MODE_HID

@@ -173,3 +173,6 @@ void initDDR() {
 }
 
 //#define INIT_FUNC initDDR();
+
+
+#define MODE_HID
