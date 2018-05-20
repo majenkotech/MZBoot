@@ -21,7 +21,12 @@ USBManager USB(usbDriver, 0x04d8, 0x0f5f, "chipKIT", "CDCACM Bootloader");
 CDCACM uSerial;
 
 #elif defined(MODE_SERIAL)
-// Nothing to define here.
+#if !defined(SERIAL)
+#error MODE_SERIAL defined but no SERIAL defined.
+#endif
+#if !defined(BAUD)
+#error MODE_SERIAL defined but no BAUD defined.
+#endif
 
 #else
 #error No MODE_x specified
