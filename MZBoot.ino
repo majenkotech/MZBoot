@@ -184,22 +184,42 @@ void executeApp() {
     SERIAL.end();
     #endif
     disableInterrupts();
-    /*
+
+    #ifdef IFS0
     IFS0 = 0;
-    IFS1 = 0;
-    IFS2 = 0;
-    IFS3 = 0;
-    IFS4 = 0;
-    IFS5 = 0;
-    IFS6 = 0;
     IEC0 = 0;
+    #endif
+
+    #ifdef IFS1
+    IFS1 = 0;
     IEC1 = 0;
+    #endif
+
+    #ifdef IFS2
+    IFS2 = 0;
     IEC2 = 0;
+    #endif
+
+    #ifdef IFS3
+    IFS3 = 0;
     IEC3 = 0;
+    #endif
+
+    #ifdef IFS4
+    IFS4 = 0;
     IEC4 = 0;
+    #endif
+
+    #ifdef IFS5
+    IFS5 = 0;
     IEC5 = 0;
+    #endif
+
+    #ifdef IFS6
+    IFS6 = 0;
     IEC6 = 0;
-    */
+    #endif
+
     for (int i = 0; i < NUM_DIGITAL_PINS; i++) {
         pinMode(i, INPUT);
     }
