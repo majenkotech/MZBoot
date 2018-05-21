@@ -11,12 +11,12 @@
 
 
 #if defined(MODE_HID)
-USBHS usbDriver;
+USBFS usbDriver;
 USBManager USB(usbDriver, 0x04d8, 0x0f5f, "chipKIT", "HID Bootloader");
 HID_Raw HID;
 
 #elif defined(MODE_CDCACM)
-USBHS usbDriver;
+USBFS usbDriver;
 USBManager USB(usbDriver, 0x04d8, 0x0f5f, "chipKIT", "CDCACM Bootloader");
 CDCACM uSerial;
 
@@ -184,6 +184,7 @@ void executeApp() {
     SERIAL.end();
     #endif
     disableInterrupts();
+    /*
     IFS0 = 0;
     IFS1 = 0;
     IFS2 = 0;
@@ -198,6 +199,7 @@ void executeApp() {
     IEC4 = 0;
     IEC5 = 0;
     IEC6 = 0;
+    */
     for (int i = 0; i < NUM_DIGITAL_PINS; i++) {
         pinMode(i, INPUT);
     }
