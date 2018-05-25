@@ -53,4 +53,6 @@
 
 #define MODE_HID
 
+#define USBDEV USBHS
+
 #endif

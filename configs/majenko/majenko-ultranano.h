@@ -1,4 +1,4 @@
-#if defined(_BOARD_LENNY_)
+#if defined(_BOARD_ULTRANANO_)
 #define _BOARD_VALID_
 
     //* Oscillator Settings
@@ -44,5 +44,4 @@
 #define LED PIN_LED1
 #define MODE_HID
 #define USBDEV USBFS
-
 #endif

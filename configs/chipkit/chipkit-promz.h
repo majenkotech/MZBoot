@@ -55,5 +55,6 @@
 
 #define LED LED_BUILTIN
 #define MODE_HID
+#define USBDEV USBHS
 
 #endif

@@ -11,12 +11,12 @@
 
 
 #if defined(MODE_HID)
-USBFS usbDriver;
+USBDEV usbDriver;
 USBManager USB(usbDriver, 0x04d8, 0x0f5f, "chipKIT", "HID Bootloader");
 HID_Raw HID;
 
 #elif defined(MODE_CDCACM)
-USBFS usbDriver;
+USBDEV usbDriver;
 USBManager USB(usbDriver, 0x04d8, 0x0f5f, "chipKIT", "CDCACM Bootloader");
 CDCACM uSerial;
 
@@ -52,6 +52,25 @@ static const uint16_t crc_table[16] =
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
     0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef
 };
+
+#define PAGES ((2*1024*1024)/BYTE_PAGE_SIZE)
+#define PAGENO(X) (((X) & 0xFFFFFF) / BYTE_PAGE_SIZE)
+
+uint8_t erasedPages[PAGES] = {0};
+
+bool isErased(uint32_t addr) {
+    uint32_t off = PAGENO(addr);
+    if (off >= PAGES) return 1;
+    return erasedPages[off];
+}
+
+void setErased(uint32_t addr) {
+    uint32_t off = PAGENO(addr);
+    if (off < PAGES) {
+        Flash.erasePage((void *)(addr));
+        erasedPages[off] = 1;    
+    }
+}
 
 uint32_t calculateCRC16(uint8_t *data, uint32_t len) {
     uint32_t i;
@@ -164,6 +183,10 @@ void processIHEXLine(uint8_t *data, uint32_t len) {
             for (int i = 0; i < dlen; i+= 4) {
                 uint32_t w = data[4+i] | (data[5+i] << 8) | (data[6+i] << 16) | (data[7+i] << 24);
                 if ((fullAddr & 0x1FFFFFFF) < 0x1FC00000) {
+                    if (!isErased(fullAddr)) {
+                        
+                        setErased(fullAddr);
+                    }
                     Flash.writeWord((void *)fullAddr, w);
                 }
                 fullAddr += 4;
@@ -178,13 +201,19 @@ void processIHEXLine(uint8_t *data, uint32_t len) {
 }
 
 void executeApp() {
+
     #if defined(MODE_HID) || defined(MODE_CDCACM)
     USB.end();
     #elif defined(MODE_SERIAL)
     SERIAL.end();
     #endif
-    disableInterrupts();
 
+
+    for (int i = 0; i < NUM_DIGITAL_PINS; i++) {
+        pinMode(i, INPUT);
+    }
+  //  delay(1000);
+    disableInterrupts();
     #ifdef IFS0
     IFS0 = 0;
     IEC0 = 0;
@@ -219,10 +248,6 @@ void executeApp() {
     IFS6 = 0;
     IEC6 = 0;
     #endif
-
-    for (int i = 0; i < NUM_DIGITAL_PINS; i++) {
-        pinMode(i, INPUT);
-    }
     jumpPoint();
 }
 
@@ -237,7 +262,7 @@ void processAN1388Packet(uint8_t *data, uint32_t len) {
         break;
 
         case 0x02: { // Erase flash
-            Flash.eraseProgmem();
+    //        Flash.eraseProgmem();
             uint8_t resp[1] = {0x02};
             sendPacket(resp, 1);
         }
@@ -386,3 +411,4 @@ void loop() {
         packetValid = false;
     }
 }
+
