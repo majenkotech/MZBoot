@@ -45,6 +45,11 @@ INPUT("crtbegin.o")
 INPUT("crtend.o")
 INPUT("crtn.o")
 
+PROVIDE(_library_table = _LIBRARY_ADDR);
+
+PROVIDE(_sketch_start = _SKETCH_START);
+PROVIDE(_sketch_size = _SKETCH_SIZE);
+
 /*************************************************************************
  * Configuration-word sections. Map the config-pragma input sections to
  * absolute-address output sections.
@@ -54,6 +59,20 @@ SECTIONS
 {
 
   /DISCARD/ : { *(.bev_handler) }
+
+
+  .library_lookup _LIBRARY_ADDR :
+  {
+     KEEP(*(.library_lookup))
+     KEEP(*(.library_lookup.*))
+    . = ALIGN(4);
+  } > kseg1_library_mem
+
+  .library :
+  {
+    KEEP(*(.library))
+    KEEP(*(.library.*))
+  } > kseg1_library_mem
 
   .eeprom_pic32 _EEPROM_ADDR (NOLOAD):
   {
@@ -897,6 +916,7 @@ SECTIONS
     _sbss_end = . ;
     . = ALIGN(4) ;
   } >kseg0_data_mem
+
   /*
    *  Align here to ensure that the .bss section occupies space up to
    *  _end.  Align after .bss to ensure correct alignment even if the

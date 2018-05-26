@@ -42,27 +42,42 @@ volatile uint32_t packetLength = 0;
 
 void (*jumpPoint)() = (void (*)())(BOOT_JUMP);
 
+extern const char _sketch_start;
+extern const char _sketch_size;
+
+const uint32_t sketchStart = (uint32_t) &_sketch_start;
+const uint32_t sketchSize = (uint32_t) &_sketch_size;
+const uint32_t sketchEnd = sketchStart + sketchEnd - 1;
+
+
 static const uint16_t crc_table[16] = {
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
     0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef
 };
 
-#define PAGES ((2*1024*1024)/BYTE_PAGE_SIZE)
+#define PAGES (sketchSize/BYTE_PAGE_SIZE)
 #define PAGENO(X) (((X) & 0xFFFFFF) / BYTE_PAGE_SIZE)
 
-uint8_t erasedPages[PAGES] = {0};
+uint8_t * erasedPages;
 
 bool isErased(uint32_t addr) {
     uint32_t off = PAGENO(addr);
+    
     if (off >= PAGES) return 1;
-    return erasedPages[off];
+
+    uint32_t aoff = off / 8;
+    uint32_t boff = off & 8;
+
+    return erasedPages[aoff] & (1 << boff) ? true : false;
 }
 
 void setErased(uint32_t addr) {
     uint32_t off = PAGENO(addr);
+    uint32_t aoff = off / 8;
+    uint32_t boff = off & 8;
     if (off < PAGES) {
         Flash.erasePage((void *)(addr));
-        erasedPages[off] = 1;    
+        erasedPages[aoff] |= (1 << boff);
     }
 }
 
@@ -176,9 +191,8 @@ void processIHEXLine(uint8_t *data, uint32_t len) {
             uint32_t fullAddr = (offset << 16) | addr;
             for (int i = 0; i < dlen; i+= 4) {
                 uint32_t w = data[4+i] | (data[5+i] << 8) | (data[6+i] << 16) | (data[7+i] << 24);
-                if ((fullAddr & 0x1FFFFFFF) < 0x1FC00000) {
+                if (((fullAddr & 0x1FFFFFFF) >= sketchStart) && ((fullAddr & 0x1FFFFFFF) <= sketchEnd)) {
                     if (!isErased(fullAddr)) {
-                        
                         setErased(fullAddr);
                     }
                     Flash.writeWord((void *)fullAddr, w);
@@ -308,6 +322,9 @@ void processAN1388Packet(uint8_t *data, uint32_t len) {
 }
 
 void setup() {
+
+    erasedPages = (uint8_t *)malloc(PAGES / 8);
+
 #ifdef INIT_FUNC
     INIT_FUNC
 #endif

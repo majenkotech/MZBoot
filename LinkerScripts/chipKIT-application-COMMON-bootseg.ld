@@ -40,6 +40,9 @@ INPUT("crtend.o")
 INPUT("crtn.o")
 OPTIONAL("libmchp_peripheral.a")
 
+PROVIDE(_sketch_start = _SKETCH_START);
+PROVIDE(_sketch_size = _SKETCH_SIZE);
+
 /*************************************************************************
  * Start the layout of memory, the sections...
  *************************************************************************/

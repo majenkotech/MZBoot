@@ -46,6 +46,12 @@ MEMORY
 
     kseg1_eeprom_mem        : ORIGIN = 0xBD1FC000, LENGTH = 0x4000
 
+    kseg0_sketch_mem        : ORIGIN = 0x9d000000, LENGTH = 0x1fc000
+    kseg1_sketch_mem        : ORIGIN = 0xbd000000, LENGTH = 0x1fc000
+
+    kseg1_library_mem       : ORIGIN = 0xbfc40000, LENGTH = 0x09000
+    kseg1_nvram_mem         : ORIGIN = 0xbfc4e000, LENGTH = 0x01000
+
     configsfrs              : ORIGIN = 0xBFC0FFC0, LENGTH = 0x10
     config_BFC0FF40         : ORIGIN = 0xbfc0ff40, LENGTH = 0x00000004
     config_BFC0FF44         : ORIGIN = 0xbfc0ff44, LENGTH = 0x00000004
@@ -177,6 +183,9 @@ MEMORY
  * Memory Address Equates
  *************************************************************************/
 
+_SKETCH_START               = ORIGIN(kseg0_sketch_mem);
+_SKETCH_SIZE                = LENGTH(kseg0_sketch_mem);
+
 _BEV_EXCPT_ADDR                 = 0xBFC00380;
 _DBG_EXCPT_ADDR                 = 0xBFC00480;
 
@@ -264,7 +273,7 @@ _imageExecutionJumpToFirstInFlash   = 0x02000000 ;  /* the bootloader will jump 
  _IMAGE_FLASH_SIZE      = LENGTH(kseg0_vector_mem) + LENGTH(kseg0_program_mem);
  _JUMP_ADDR             = _RESET_ADDR;
 
-
+_LIBRARY_ADDR           = ORIGIN(kseg1_library_mem);
 
 
 /* these are not used */

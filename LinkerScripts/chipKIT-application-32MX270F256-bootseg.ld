@@ -48,6 +48,8 @@ MEMORY
   configsfrs                 : ORIGIN = 0xBFC00BF0, LENGTH = 0x10
 
   kseg0_eeprom_mem           : ORIGIN = 0x9D037000, LENGTH = 0x1000
+
+  kseg0_sketch_mem           : ORIGIN = 0x9d000000, LENGTH = 0x37000
 }
 
 /*************************************************************************
@@ -62,6 +64,9 @@ _EEPROM_ADDR            = ORIGIN(kseg0_eeprom_mem);
 _BEV_EXCPT_ADDR         = 0xBFC00380;
 _DBG_EXCPT_ADDR         = 0xBFC00480;
 _DBG_CODE_ADDR          = ORIGIN(debug_exec_mem);
+
+_SKETCH_START               = ORIGIN(kseg0_sketch_mem);
+_SKETCH_SIZE                = LENGTH(kseg0_sketch_mem);
 
 /*************************************************************************
  *  Bootloader program directives.
