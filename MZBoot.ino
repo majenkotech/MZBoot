@@ -1,54 +1,48 @@
+/*
+ * Copyright (c) 2018, Majenko Technologies
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * * Redistributions of source code must retain the above copyright notice, this
+ *   list of conditions and the following disclaimer.
+ * 
+ * * Redistributions in binary form must reproduce the above copyright notice, this
+ *   list of conditions and the following disclaimer in the documentation and/or
+ *   other materials provided with the distribution.
+ * 
+ * * Neither the name of Majenko Technologies nor the names of its
+ *   contributors may be used to endorse or promote products derived from
+ *   this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #include <Flash.h>
 #include <SoftPWMServo.h>
 
-#include "configs.h"
-
 #define ENABLE_DEBUG 0
 
-#ifndef BOOT_TIMEOUT_SECONDS
-#define BOOT_TIMEOUT_SECONDS 5
-#endif
-
-
-#if defined(MODE_HID)
-USBDEV usbDriver;
-USBManager USB(usbDriver, 0x04d8, 0x0f5f, "chipKIT", "HID Bootloader");
-HID_Raw HID;
-
-#elif defined(MODE_CDCACM)
-USBDEV usbDriver;
-USBManager USB(usbDriver, 0x04d8, 0x0f5f, "chipKIT", "CDCACM Bootloader");
-CDCACM uSerial;
-
-#elif defined(MODE_SERIAL)
-#if !defined(SERIAL)
-#error MODE_SERIAL defined but no SERIAL defined.
-#endif
-#if !defined(BAUD)
-#error MODE_SERIAL defined but no BAUD defined.
-#endif
-
-#else
-#error No MODE_x specified
-#endif
-
-#if (ENABLE_DEBUG == 1)
-CDCACM debugSerial;
-#define DEBUG(...) debugSerial.printf(__VA_ARGS__)
-#else
-#define DEBUG(...)
-#endif
+#include "configs.h"
+#include "DeviceSetup.h"
 
 volatile uint8_t packet[64];
 volatile bool packetValid = false;
 volatile uint32_t packetLength = 0;
 
-void (*jumpPoint)() = (void (*)())0x9D001000;
+void (*jumpPoint)() = (void (*)())(BOOT_JUMP);
 
-#define WRAP(X, Y) X = (X) % (Y)
-
-static const uint16_t crc_table[16] =
-{
+static const uint16_t crc_table[16] = {
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
     0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef
 };
@@ -93,7 +87,7 @@ void handleIncomingByte(uint8_t b) {
 
     if (dle) {
         packet[bpos++] = b;
-        WRAP(bpos, 64);
+        bpos = bpos % 64; 
         dle = false;
     } else {
         switch (b) {
@@ -114,8 +108,8 @@ void handleIncomingByte(uint8_t b) {
             break;
 
             default: { 
-                packet[bpos++] = b;                
-                WRAP(bpos, 64);
+                packet[bpos++] = b;
+                bpos = bpos % 64; 
             }
         }
     }
@@ -212,7 +206,7 @@ void executeApp() {
     for (int i = 0; i < NUM_DIGITAL_PINS; i++) {
         pinMode(i, INPUT);
     }
-  //  delay(1000);
+
     disableInterrupts();
     #ifdef IFS0
     IFS0 = 0;
@@ -262,7 +256,10 @@ void processAN1388Packet(uint8_t *data, uint32_t len) {
         break;
 
         case 0x02: { // Erase flash
-    //        Flash.eraseProgmem();
+            // We don't actually do anything here. This is to protect
+            // the split flash area of smaller chips.  We'll say that
+            // we did it though, just to keep pic32prog happy.
+            // Flash.eraseProgmem();
             uint8_t resp[1] = {0x02};
             sendPacket(resp, 1);
         }
@@ -309,7 +306,6 @@ void processAN1388Packet(uint8_t *data, uint32_t len) {
         break;
     }
 }
-
 
 void setup() {
 #ifdef INIT_FUNC
