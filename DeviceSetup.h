@@ -29,7 +29,7 @@ CDCACM debugSerial;
 #endif
 
 #ifndef BOOT_TIMEOUT_SECONDS
-#define BOOT_TIMEOUT_SECONDS 5
+#define BOOT_TIMEOUT_SECONDS 15
 #endif
 
 #ifndef BOOT_JUMP

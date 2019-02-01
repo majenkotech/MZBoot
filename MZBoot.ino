@@ -45,9 +45,9 @@ void (*jumpPoint)() = (void (*)())(BOOT_JUMP);
 extern const char _sketch_start;
 extern const char _sketch_size;
 
-const uint32_t sketchStart = (uint32_t) &_sketch_start;
-const uint32_t sketchSize = (uint32_t) &_sketch_size;
-const uint32_t sketchEnd = sketchStart + sketchEnd - 1;
+const uint32_t sketchStart = ((uint32_t) &_sketch_start) & 0x1FFFFFFF;
+const uint32_t sketchSize = ((uint32_t) &_sketch_size);
+const uint32_t sketchEnd = sketchStart + sketchSize - 1;
 
 
 static const uint16_t crc_table[16] = {
@@ -55,8 +55,8 @@ static const uint16_t crc_table[16] = {
     0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef
 };
 
-#define PAGES (sketchSize/BYTE_PAGE_SIZE)
-#define PAGENO(X) (((X) & 0xFFFFFF) / BYTE_PAGE_SIZE)
+#define PAGES (sketchSize/(__FLASH_PAGE__ * 4))
+#define PAGENO(X) (((X) & 0xFFFFFF) / (__FLASH_PAGE__ * 4))
 
 uint8_t * erasedPages;
 
@@ -184,18 +184,25 @@ void processIHEXLine(uint8_t *data, uint32_t len) {
     switch(type) {
         case 0x04: { // Set address offset
             offset = data[5] | (data[4] << 8);
+            DEBUG("OFFSET: 0x%04x\n", offset);
         }
         break;
 
         case 0x00: { // Data
             uint32_t fullAddr = (offset << 16) | addr;
+			DEBUG("DATA: 0x%08x\n", fullAddr);
+			DEBUG("Sketch start: 0x%08x end: 0x%08x\n", sketchStart, sketchEnd);
             for (int i = 0; i < dlen; i+= 4) {
+            	DEBUG("W\n");
                 uint32_t w = data[4+i] | (data[5+i] << 8) | (data[6+i] << 16) | (data[7+i] << 24);
                 if (((fullAddr & 0x1FFFFFFF) >= sketchStart) && ((fullAddr & 0x1FFFFFFF) <= sketchEnd)) {
                     if (!isErased(fullAddr)) {
                         setErased(fullAddr);
                     }
-                    Flash.writeWord((void *)fullAddr, w);
+                    DEBUG("Writing flash address 0x%08x\n", fullAddr);
+                    if (!Flash.writeWord((void *)fullAddr, w)) {
+                   	DEBUG("Error writing flash address 0x%08x\n", fullAddr);
+                    }
                 }
                 fullAddr += 4;
             }
@@ -209,6 +216,10 @@ void processIHEXLine(uint8_t *data, uint32_t len) {
 }
 
 void executeApp() {
+
+	executeSoftReset(0);
+    while(1);
+
 
     #if defined(MODE_HID) || defined(MODE_CDCACM)
     USB.end();
@@ -323,6 +334,7 @@ void processAN1388Packet(uint8_t *data, uint32_t len) {
 
 void setup() {
 
+
     erasedPages = (uint8_t *)malloc(PAGES / 8);
 
 #ifdef INIT_FUNC
@@ -408,7 +420,7 @@ void loop() {
     if (millis() - ts > (BOOT_TIMEOUT_SECONDS * 1000)) {
         executeApp();
     }
-    
+ 	   
     if (packetValid) {
         DEBUG("Packet valid\r\n");
         ts = millis();
@@ -425,3 +437,32 @@ void loop() {
     }
 }
 
+
+extern "C" {
+	void _scheduleTask();
+
+	
+	int main(void)
+	{
+
+		if ((RCON & 0x80) == 0) {
+			asm volatile("lui $k0,0x9d00");
+			asm volatile("ori $k0,0x1000");
+			asm volatile("jal $k0");
+//			jumpPoint();
+        	while(1);
+    	}
+
+	    init();
+	
+	    setup();
+	
+	    while (1)
+	    {
+	        _scheduleTask();
+	        loop();
+	        if (serialEventRun) serialEventRun();
+	    }
+	    return 0;
+	}
+}

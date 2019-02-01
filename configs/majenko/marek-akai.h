@@ -1,4 +1,4 @@
-#if defined(_BOARD_MOD_BASE_FX_)
+#if defined(_BOARD_AKAI_)
 #define _BOARD_VALID_
 
 #pragma config FMIIEN = ON              // Ethernet RMII/MII Enable (MII Enabled)
@@ -51,8 +51,11 @@
 // DEVCP0
 #pragma config CP = OFF                 // Code Protect (Protection Disabled)
 
-#define MODE_CDCACM
+#define MODE_HID
 
 #define USBDEV USBFS
+
+#define LED PIN_LED1
+//#define BUTTON PIN_BTN1
 
 #endif
