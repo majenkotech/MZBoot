@@ -46,7 +46,7 @@ extern const char _sketch_start;
 extern const char _sketch_size;
 
 const uint32_t sketchStart = ((uint32_t) &_sketch_start) & 0x1FFFFFFF;
-const uint32_t sketchSize = ((uint32_t) &_sketch_size);
+const uint32_t sketchSize = ((uint32_t) FLASHEND);
 const uint32_t sketchEnd = sketchStart + sketchSize - 1;
 
 
@@ -58,25 +58,31 @@ static const uint16_t crc_table[16] = {
 #define PAGES (sketchSize/(__FLASH_PAGE__ * 4))
 #define PAGENO(X) (((X) & 0xFFFFFF) / (__FLASH_PAGE__ * 4))
 
-uint8_t * erasedPages;
+uint8_t erasedPages[PAGES/8] = {0};
 
 bool isErased(uint32_t addr) {
     uint32_t off = PAGENO(addr);
-    
+   
     if (off >= PAGES) return 1;
 
     uint32_t aoff = off / 8;
-    uint32_t boff = off & 8;
+    uint32_t boff = off & 7;
 
-    return erasedPages[aoff] & (1 << boff) ? true : false;
+    DEBUG("Page number %d = %d,%d (%02x)\n", off, aoff, boff, erasedPages[aoff]);
+ 
+
+    return (erasedPages[aoff] & (1 << boff)) ? true : false;
 }
 
 void setErased(uint32_t addr) {
     uint32_t off = PAGENO(addr);
     uint32_t aoff = off / 8;
-    uint32_t boff = off & 8;
+    uint32_t boff = off & 7;
     if (off < PAGES) {
-        Flash.erasePage((void *)(addr));
+    	DEBUG("Erasing page %d\n", aoff);
+        if (!Flash.erasePage((void *)(addr))) {
+        	DEBUG("Error: erase failed!\n");
+        }
         erasedPages[aoff] |= (1 << boff);
     }
 }
@@ -184,24 +190,19 @@ void processIHEXLine(uint8_t *data, uint32_t len) {
     switch(type) {
         case 0x04: { // Set address offset
             offset = data[5] | (data[4] << 8);
-            DEBUG("OFFSET: 0x%04x\n", offset);
         }
         break;
 
         case 0x00: { // Data
             uint32_t fullAddr = (offset << 16) | addr;
-			DEBUG("DATA: 0x%08x\n", fullAddr);
-			DEBUG("Sketch start: 0x%08x end: 0x%08x\n", sketchStart, sketchEnd);
-            for (int i = 0; i < dlen; i+= 4) {
-            	DEBUG("W\n");
+         for (int i = 0; i < dlen; i+= 4) {
                 uint32_t w = data[4+i] | (data[5+i] << 8) | (data[6+i] << 16) | (data[7+i] << 24);
                 if (((fullAddr & 0x1FFFFFFF) >= sketchStart) && ((fullAddr & 0x1FFFFFFF) <= sketchEnd)) {
                     if (!isErased(fullAddr)) {
                         setErased(fullAddr);
                     }
-                    DEBUG("Writing flash address 0x%08x\n", fullAddr);
                     if (!Flash.writeWord((void *)fullAddr, w)) {
-                   	DEBUG("Error writing flash address 0x%08x\n", fullAddr);
+                   		//DEBUG("Error writing flash address 0x%08x\n", fullAddr);
                     }
                 }
                 fullAddr += 4;
@@ -333,9 +334,6 @@ void processAN1388Packet(uint8_t *data, uint32_t len) {
 }
 
 void setup() {
-
-
-    erasedPages = (uint8_t *)malloc(PAGES / 8);
 
 #ifdef INIT_FUNC
     INIT_FUNC
