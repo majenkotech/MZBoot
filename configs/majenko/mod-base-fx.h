@@ -51,7 +51,7 @@
 // DEVCP0
 #pragma config CP = OFF                 // Code Protect (Protection Disabled)
 
-#define MODE_CDCACM
+#define MODE_HID
 
 #define USBDEV USBFS
 

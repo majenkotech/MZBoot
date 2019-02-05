@@ -217,58 +217,9 @@ void processIHEXLine(uint8_t *data, uint32_t len) {
 }
 
 void executeApp() {
-
+	// Just do a soft reset. main() does the rest.
 	executeSoftReset(0);
     while(1);
-
-
-    #if defined(MODE_HID) || defined(MODE_CDCACM)
-    USB.end();
-    #elif defined(MODE_SERIAL)
-    SERIAL.end();
-    #endif
-
-
-    for (int i = 0; i < NUM_DIGITAL_PINS; i++) {
-        pinMode(i, INPUT);
-    }
-
-    disableInterrupts();
-    #ifdef IFS0
-    IFS0 = 0;
-    IEC0 = 0;
-    #endif
-
-    #ifdef IFS1
-    IFS1 = 0;
-    IEC1 = 0;
-    #endif
-
-    #ifdef IFS2
-    IFS2 = 0;
-    IEC2 = 0;
-    #endif
-
-    #ifdef IFS3
-    IFS3 = 0;
-    IEC3 = 0;
-    #endif
-
-    #ifdef IFS4
-    IFS4 = 0;
-    IEC4 = 0;
-    #endif
-
-    #ifdef IFS5
-    IFS5 = 0;
-    IEC5 = 0;
-    #endif
-
-    #ifdef IFS6
-    IFS6 = 0;
-    IEC6 = 0;
-    #endif
-    jumpPoint();
 }
 
 void processAN1388Packet(uint8_t *data, uint32_t len) {
@@ -404,7 +355,6 @@ void loop() {
 
     static uint32_t ts = millis();
 
-
     #if defined(MODE_CDCACM)
     while (uSerial.available() && !packetValid) {
         handleIncomingByte(uSerial.read());
@@ -442,12 +392,12 @@ extern "C" {
 	
 	int main(void)
 	{
-
+		// If it's not an MCLR reset then
+		// jump straight to the application.
 		if ((RCON & 0x80) == 0) {
 			asm volatile("lui $k0,0x9d00");
 			asm volatile("ori $k0,0x1000");
 			asm volatile("jal $k0");
-//			jumpPoint();
         	while(1);
     	}
 
