@@ -4,4 +4,5 @@
 #include "configs/majenko/mod-base-fx.h"
 #include "configs/majenko/majenko-ultranano.h"
 #include "configs/majenko/marek-akai.h"
+#include "configs/majenko/majenko-gamma.h"
 #endif

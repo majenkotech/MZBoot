@@ -56,6 +56,7 @@
 #pragma config PGL1WAY =    OFF
 #pragma config PMDL1WAY =   OFF
 #pragma config IOL1WAY =    OFF
+#define LED PIN_LED1
 
 static inline 
 void initDDR() {
@@ -175,9 +176,11 @@ void initDDR() {
     while ((*(volatile uint32_t*)(0xBF8E9100) & 0x00000003) != 0x00000003);
 }
 
-//#define INIT_FUNC initDDR();
+#define INIT_FUNC initDDR();
 
-#define MODE_HID
-#define USBDEV USBHS
+#define MODE_SERIAL
+#define BAUD 115200
+#define SERIAL Serial
+//#define USBDEV USBHS
 
 #endif
