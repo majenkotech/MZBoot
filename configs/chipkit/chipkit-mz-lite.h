@@ -34,18 +34,18 @@
 
 // DEVCFG0
 #pragma config DEBUG = OFF              // Background Debugger Enable (Debugger is disabled)
-#pragma config JTAGEN = OFF             // JTAG Enable (JTAG Disabled)
+#pragma config JTAGEN = ON              // JTAG Enable (JTAG Disabled)
 #pragma config ICESEL = ICS_PGx2        // ICE/ICD Comm Channel Select (Communicate on PGEC2/PGED2)
-#pragma config TRCEN = ON               // Trace Enable (Trace features in the CPU are enabled)
+#pragma config TRCEN = OFF              // Trace Enable (Trace features in the CPU are enabled)
 #pragma config BOOTISA = MIPS32         // Boot ISA Selection (Boot code and Exception code is MIPS32)
 #pragma config FECCCON = OFF_UNLOCKED   // Dynamic Flash ECC Configuration (ECC and Dynamic ECC are disabled (ECCCON bits are writable))
 #pragma config FSLEEP = OFF             // Flash Sleep Mode (Flash is powered down when the device is in Sleep mode)
-#pragma config DBGPER = ALLOW_PG2       // Debug Mode CPU Access Permission (Allow CPU access to Permission Group 2 permission regions)
+#pragma config DBGPER = PG_ALL          // Debug Mode CPU Access Permission (Allow CPU access to Permission Group 2 permission regions)
 #pragma config SMCLR = MCLR_NORM        // Soft Master Clear Enable bit (MCLR pin generates a normal system Reset)
-#pragma config SOSCGAIN = GAIN_2X       // Secondary Oscillator Gain Control bits (2x gain setting)
-#pragma config SOSCBOOST = OFF          // Secondary Oscillator Boost Kick Start Enable bit (Normal start of the oscillator)
-#pragma config POSCGAIN = GAIN_1X       // Primary Oscillator Gain Control bits (1x gain setting)
-#pragma config POSCBOOST = ON           // Primary Oscillator Boost Kick Start Enable bit (Boost the kick start of the oscillator)
+//#pragma config SOSCGAIN = GAIN_LEVEL_0       // Secondary Oscillator Gain Control bits (2x gain setting)
+//#pragma config SOSCBOOST = OFF          // Secondary Oscillator Boost Kick Start Enable bit (Normal start of the oscillator)
+//#pragma config POSCGAIN = GAIN_LEVEL_0       // Primary Oscillator Gain Control bits (1x gain setting)
+//#pragma config POSCBOOST = ON           // Primary Oscillator Boost Kick Start Enable bit (Boost the kick start of the oscillator)
 #pragma config EJTAGBEN = NORMAL        // EJTAG Boot (Normal EJTAG functionality)
 
 // DEVCP0

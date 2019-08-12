@@ -387,6 +387,18 @@ void loop() {
 
 
 extern "C" {
+
+		#if defined(MODE_HID)
+	void _on_reset() {
+		if ((RCON & 0x80) == 0) {
+			asm volatile("lui $k0,0x9d00");
+			asm volatile("ori $k0,0x1000");
+			asm volatile("jal $k0");
+			while(1);
+    		}
+	}
+    		#endif
+	
 	void _scheduleTask();
 
 	
@@ -394,15 +406,15 @@ extern "C" {
 	{
 		// If it's not an MCLR reset then
 		// jump straight to the application.
-		#if defined(MODE_HID)
-		if ((RCON & 0x80) == 0) {
-			asm volatile("lui $k0,0x9d00");
-			asm volatile("ori $k0,0x1000");
-			asm volatile("jal $k0");
-			while(1);
-    		}
-    		#endif
-
+//		#if defined(MODE_HID)
+//		if ((RCON & 0x80) == 0) {
+//			asm volatile("lui $k0,0x9d00");
+//			asm volatile("ori $k0,0x1000");
+//			asm volatile("jal $k0");
+//			while(1);
+//    		}
+//    		#endif
+//
 	    init();
 	
 	    setup();
