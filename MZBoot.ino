@@ -49,6 +49,9 @@ const uint32_t sketchStart = ((uint32_t) &_sketch_start) & 0x1FFFFFFF;
 const uint32_t sketchSize = ((uint32_t) FLASHEND);
 const uint32_t sketchEnd = sketchStart + sketchSize - 1;
 
+#define BF_CHIPID           0x00000001
+#define BF_FEATURES         0x00000002
+
 
 static const uint16_t crc_table[16] = {
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
@@ -274,6 +277,18 @@ void processAN1388Packet(uint8_t *data, uint32_t len) {
             resp[2] = DEVID >> 8;
             resp[3] = DEVID >> 16;
             resp[4] = DEVID >> 24;
+            sendPacket(resp, 5);
+        }
+        break;
+
+        case 0x07: { // Get bootloader features
+            uint32_t features = BF_CHIPID | BF_FEATURES;
+            uint8_t resp[5];
+            resp[0] = 0x08;
+            resp[1] = (features >> 24) & 0xFF;
+            resp[2] = (features >> 16) & 0xFF;
+            resp[3] = (features >> 8) & 0xFF;
+            resp[4] = (features) & 0xFF;
             sendPacket(resp, 5);
         }
         break;

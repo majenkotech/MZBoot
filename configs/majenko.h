@@ -5,4 +5,5 @@
 #include "configs/majenko/majenko-ultranano.h"
 #include "configs/majenko/marek-akai.h"
 #include "configs/majenko/majenko-gamma.h"
+#include "configs/majenko/soundstick.h"
 #endif
