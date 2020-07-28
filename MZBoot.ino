@@ -230,7 +230,7 @@ void processAN1388Packet(uint8_t *data, uint32_t len) {
 
     switch (command) {
         case 0x01: { // Read bootloader version
-            uint8_t resp[3] = {0x01, 1, 5};
+            uint8_t resp[3] = {0x01, 1, 6};
             sendPacket(resp, 3);
         }
         break;
@@ -363,8 +363,6 @@ void loop() {
         }
 
         SoftPWMServoPWMWrite(LED, bright);
-
-        
     }
     #endif
 
