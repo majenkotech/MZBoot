@@ -71,7 +71,7 @@ bool isErased(uint32_t addr) {
     uint32_t aoff = off / 8;
     uint32_t boff = off & 7;
 
-    DEBUG("Page number %d = %d,%d (%02x)\n", off, aoff, boff, erasedPages[aoff]);
+    DEBUG("Page number %d = %d,%d (%02x)\r\n", off, aoff, boff, erasedPages[aoff]);
  
 
     return (erasedPages[aoff] & (1 << boff)) ? true : false;
@@ -108,32 +108,44 @@ uint32_t calculateCRC16(uint8_t *data, uint32_t len) {
 void handleIncomingByte(uint8_t b) {
     static uint32_t bpos = 0;
     static bool dle = false;
+    static bool started = false;
+
+    DEBUG("-%02x", b);
 
     if (dle) {
-        packet[bpos++] = b;
-        bpos = bpos % 64; 
+        if (started) {
+          packet[bpos++] = b;
+          bpos = bpos % 64; 
+        }
         dle = false;
     } else {
         switch (b) {
             case 0x01: { // SOH
+                started = true;
+                DEBUG("S");
                 bpos = 0;
             }
             break;
 
             case 0x04: { // EOT
+                started = false;
+                DEBUG("E");
                 packetLength = bpos;
                 packetValid = true;
             }
             break;
 
             case 0x10: { // DLE
+                DEBUG("D");
                 dle = true;
             }
             break;
 
             default: { 
-                packet[bpos++] = b;
-                bpos = bpos % 64; 
+                if (started) {
+                  packet[bpos++] = b;
+                  bpos = bpos % 64; 
+                }
             }
         }
     }
@@ -205,7 +217,7 @@ void processIHEXLine(uint8_t *data, uint32_t len) {
                         setErased(fullAddr);
                     }
                     if (!Flash.writeWord((void *)fullAddr, w)) {
-                   		//DEBUG("Error writing flash address 0x%08x\n", fullAddr);
+                   		//DEBUG("Error writing flash address 0x%08x\r\n", fullAddr);
                     }
                 }
                 fullAddr += 4;
@@ -227,7 +239,7 @@ void executeApp() {
 
 void processAN1388Packet(uint8_t *data, uint32_t len) {
     uint8_t command = data[0];
-
+    DEBUG("Processing packet type %02x\r\n", command);
     switch (command) {
         case 0x01: { // Read bootloader version
             uint8_t resp[3] = {0x01, 1, 6};
@@ -300,7 +312,6 @@ void processAN1388Packet(uint8_t *data, uint32_t len) {
 }
 
 void setup() {
-
 #ifdef INIT_FUNC
     INIT_FUNC
 #endif
@@ -392,6 +403,14 @@ void loop() {
 
             if (cs == newcs) {
                 processAN1388Packet((uint8_t *)packet, packetLength - 2);
+            } else {
+              DEBUG("Invalid checksum\r\n");
+              DEBUG("Packet content:\r\n");
+              for (int i = 0; i < packetLength; i++) {
+                DEBUG("%02x ", packet[i]);
+                if (i % 16 == 15) DEBUG("\r\n");
+              }
+              DEBUG("\r\n");
             }
         }       
         packetValid = false;
